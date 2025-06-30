@@ -1,0 +1,30 @@
+{{- /*
+  Este manifest será executado como hook.
+  - post-install  → após o Helm concluir a instalação.
+  - post-upgrade  → após upgrades futuros.
+  - hook-weight   → define ordem entre múltiplos hooks (quanto maior,
+                    mais tarde; usamos 5 para rodar depois dos defaults).
+  - hook-delete-policy: before-hook-creation  → mantemos o objeto
+                    entre versões; se você reinstalar o chart, ele será
+                    recriado limpo.
+*/ -}}
+{{- if .Values.global.clusterIssuer.enabled }}
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: {{ .Values.global.clusterIssuer.name }}
+  annotations:
+    "helm.sh/hook": post-install,post-upgrade
+    "helm.sh/hook-weight": "5"
+    "helm.sh/hook-delete-policy": before-hook-creation
+spec:
+  acme:
+    email: {{ .Values.global.clusterIssuer.email }}
+    server: {{ .Values.global.clusterIssuer.server }}
+    privateKeySecretRef:
+      name: {{ .Values.global.clusterIssuer.accountKeySecret }}
+    solvers:
+      - http01:
+          ingress:
+            class: nginx
+{{- end }}

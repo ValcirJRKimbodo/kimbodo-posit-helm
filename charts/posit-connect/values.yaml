@@ -1,0 +1,87 @@
+global:
+  pvcStorageSize: "5Gi"
+
+  clusterIssuer:
+    enabled: true
+    name: letsencrypt-prod
+    email: valcir@kimbodo.com
+    server: https://acme-v02.api.letsencrypt.org/directory
+    accountKeySecret: letsencrypt-prod-account-key
+
+  postgresql:
+    auth:      
+      username: connect
+      password: connectPass
+      database: connect
+
+rstudio-connect:
+  # Configures shared storage for the Posit Connect pod.
+  sharedStorage:
+    mount: true
+
+    # The name of the PVC created for Connect's data directory.
+    # Also specified by `Launcher.DataDirPVCName` below.
+    name: rsc-pvc
+
+    # The storageClass to use for Connect's data directory. Must
+    # support RWX.
+    # Replace with your storage class name if different.
+    storageClassName: rsc-nfs
+    requests:
+      storage: 10G
+  
+  # -- Defines resources for the rstudio-connect container
+  resources: 
+    requests:
+      memory: "128Mi"
+      cpu: "100m"      
+    limits:
+      memory: "2Gi"
+      cpu: "2000m"      
+  
+  hpa:
+    minReplicas: 1
+    maxReplicas: 5
+
+  pdb:
+    enabled: true
+
+  config:
+    Database:
+      Provider: "Postgres"
+    Postgres:
+      URL: "postgres://connect@posit-connect-postgresql.rstudio-connect.svc.cluster.local:5432/connect?sslmode=disable"
+
+    Authentication:
+      Provider: "oauth2"
+
+    OAuth2:
+      ClientId: "711523714722-ivnmd0ff8tuftihk5o09msokhoq8jtr4.apps.googleusercontent.com"
+      ClientSecret: "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"
+      AllowedDomain: "kimbodo.com"
+
+  pod:
+    env:
+      - name: CONNECT_POSTGRES_PASSWORD
+        valueFrom:
+          secretKeyRef:
+            name: "posit-connect-postgresql"
+            key: password    
+
+nfs-server-provisioner:
+  persistence:
+    enabled: true
+    size: "10Gi"
+  storageClass:
+    name: rsc-nfs
+    mountOptions:
+      - vers=4
+  
+ingress-nginx:
+  controller:
+    service:
+      loadBalancerIP: 104.198.152.96
+    publishService:
+      enabled: true
+    config:
+      strict-validate-path-type: false

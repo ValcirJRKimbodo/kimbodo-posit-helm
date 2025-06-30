@@ -1,0 +1,15 @@
+{{- $claim := index .Values "rstudio-connect" "sharedStorage" "name" -}}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ $claim }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "rstudio-connect.labels" . | nindent 4 }}
+spec:
+  storageClassName: standard
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: "{{ .Values.global.pvcStorageSize }}"

@@ -1,0 +1,25 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: posit-connect
+  namespace: {{ .Release.namespace }}
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+spec:
+  ingressClassName: nginx
+  tls:
+  - hosts:
+    - posit01gcp.kimbodo.com
+    secretName: posit01gcp-tls
+  rules:
+  - host: posit01gcp.kimbodo.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: {{ printf "%s-rstudio-connect" .Release.Name }}
+            port:
+              number: 3939

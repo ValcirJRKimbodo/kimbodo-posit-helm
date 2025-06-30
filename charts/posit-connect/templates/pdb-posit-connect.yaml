@@ -1,0 +1,14 @@
+{{- if (index .Values "rstudio-connect").pdb.enabled }}
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: {{ include "rstudio-connect.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "rstudio-connect.labels" . | nindent 4 }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "rstudio-connect.selectorLabels" . | nindent 6 }}
+  minAvailable: 1
+{{- end }}
