@@ -1,22 +1,39 @@
+## @@ Section GLOBAL ##
 global:
+  # -- pvcStorageSize the storage size createdd to rstudio-connect manage data
   pvcStorageSize: "5Gi"
 
+  # -- clusterIssuer is the object to set properties to thee issuer that calls letsencrypt
   clusterIssuer:
+    # -- enbled is if we gonna create it or not
     enabled: true
+    # -- name is the letscrypt metadaname
     name: letsencrypt-prod
-    email: valcir@kimbodo.com
+    # -- email is required by letsencrypt
+    email: 
+    # -- server is the lesencrypt server to get the cert. Default value is prod
     server: https://acme-v02.api.letsencrypt.org/directory
+    # -- accountKeySecret is the metadaname of the key generated 
     accountKeySecret: letsencrypt-prod-account-key
 
+  # -- postresql section is used by postgresql chart
   postgresql:
+    # -- auth is the object that postgre creat at the first execution
     auth:      
-      username: connect
-      password: connectPass
-      database: connect
+      # username is the username to be created
+      username: 
+      # password is the password for this user
+      password: 
+      # database is one database to bee created at the first execution
+      database: 
 
+## @@ Section RStudio-connect
 rstudio-connect:
   # Configures shared storage for the Posit Connect pod.
   sharedStorage:
+    # -- mount true means that the PVC is already created.
+    # -- in our environment we always gonna create it before apply the rstudio-connect chart
+    # -- or use a cloud storage, but never keep to rstudio create it
     mount: true
 
     # The name of the PVC created for Connect's data directory.
@@ -31,6 +48,7 @@ rstudio-connect:
       storage: 10G
   
   # -- Defines resources for the rstudio-connect container
+  # -- Default valuess is for a MVP
   resources: 
     requests:
       memory: "128Mi"
@@ -39,35 +57,51 @@ rstudio-connect:
       memory: "2Gi"
       cpu: "2000m"      
   
+  # -- HPA define how much repelpicas we will have for rstudio-connect pod
   hpa:
     minReplicas: 1
     maxReplicas: 5
 
+  # -- PDB enabled without any more configuration keep at least 1 up
   pdb:
     enabled: true
 
+  # -- Config section is used to create a configuration file readed by rstudio-connect pod
+  # -- the file structure is>
+  # ```
+  # [OAuth2]
+  #  AllowedDomain = kimbodo.com
+  # [Database]
+  #   Provider = Poostgres
+  # ````
   config:
+    # set the database to use
     Database:
       Provider: "Postgres"
+    # Postgres basic config  
     Postgres:
       URL: "postgres://connect@posit-connect-postgresql.rstudio-connect.svc.cluster.local:5432/connect?sslmode=disable"
-
+    # Authentication type
     Authentication:
       Provider: "oauth2"
-
+    # Here is important to fill the domain, Id and secreet to validade the OAuth
     OAuth2:
-      ClientId: "711523714722-ivnmd0ff8tuftihk5o09msokhoq8jtr4.apps.googleusercontent.com"
-      ClientSecret: "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"
-      AllowedDomain: "kimbodo.com"
+      ClientId: 
+      ClientSecret:
+      AllowedDomain: 
 
+  # -- pod properties to add to rstudio-connect pod
   pod:
     env:
       - name: CONNECT_POSTGRES_PASSWORD
         valueFrom:
+          # -- this secret is created by postgresql chart
           secretKeyRef:
-            name: "posit-connect-postgresql"
+            name: 
             key: password    
 
+## @@ Section Network File System
+# -- nsf is need to scale rstudio-connect 
 nfs-server-provisioner:
   persistence:
     enabled: true
@@ -76,11 +110,13 @@ nfs-server-provisioner:
     name: rsc-nfs
     mountOptions:
       - vers=4
-  
+
+## @@ Section NGINX
 ingress-nginx:
   controller:
     service:
-      loadBalancerIP: 104.198.152.96
+      ## Ingress IP
+      loadBalancerIP: 
     publishService:
       enabled: true
     config:
