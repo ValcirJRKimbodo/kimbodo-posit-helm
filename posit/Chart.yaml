@@ -5,7 +5,12 @@ version: 0.0.1
 appVersion: "0.0.1"
 dependencies:
   - name: rstudio-connect
+    condition: rstudio-connect.enabled
     version: 0.8.3
+    repository: "https://helm.rstudio.com"
+  - name: rstudio-workbench
+    condition: rstudio-workbench.enabled
+    version: 0.9.6
     repository: "https://helm.rstudio.com"
   - name: postgresql
     repository: "https://charts.bitnami.com/bitnami"
