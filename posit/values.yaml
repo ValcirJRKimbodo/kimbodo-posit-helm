@@ -1,7 +1,5 @@
 ## @@ Section GLOBAL ##
 global:
-  # -- pvcStorageSize the storage size createdd to rstudio-connect manage data
-  pvcStorageSize: "5Gi"
 
   # -- clusterIssuer is the object to set properties to thee issuer that calls letsencrypt
   clusterIssuer:
