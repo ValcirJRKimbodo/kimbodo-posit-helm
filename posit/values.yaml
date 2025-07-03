@@ -27,6 +27,28 @@ global:
       # database is one database to bee created at the first execution
       database: 
 
+## @@ Section Network File System
+# -- nsf is need to scale rstudio-connect 
+nfs-server-provisioner:
+  persistence:
+    enabled: true
+    size: "10Gi"
+  storageClass:
+    name: rsc-nfs
+    mountOptions:
+      - vers=4
+
+## @@ Section NGINX
+ingress-nginx:
+  controller:
+    service:
+      ## Ingress IP
+      loadBalancerIP: 
+    publishService:
+      enabled: true
+    config:
+      strict-validate-path-type: false
+
 ## @@ Section RStudio-connect
 rstudio-connect:
   # Configures shared storage for the Posit Connect pod.
@@ -100,24 +122,3 @@ rstudio-connect:
             name: 
             key: password    
 
-## @@ Section Network File System
-# -- nsf is need to scale rstudio-connect 
-nfs-server-provisioner:
-  persistence:
-    enabled: true
-    size: "10Gi"
-  storageClass:
-    name: rsc-nfs
-    mountOptions:
-      - vers=4
-
-## @@ Section NGINX
-ingress-nginx:
-  controller:
-    service:
-      ## Ingress IP
-      loadBalancerIP: 
-    publishService:
-      enabled: true
-    config:
-      strict-validate-path-type: false
