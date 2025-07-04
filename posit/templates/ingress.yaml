@@ -1,3 +1,5 @@
+{{- $connecetIngress := index .Values "rstudio-connect" "ingressHost" -}}
+{{- $workbenchIngress := index .Values "rstudio-workbench" "ingressHost" -}}
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
@@ -10,10 +12,11 @@ spec:
   ingressClassName: nginx
   tls:
   - hosts:
-    - posit01gcp.kimbodo.com
+    - {{ $connecetIngress }}
+    - {{ $workbenchIngress }}
     secretName: posit01gcp-tls
   rules:
-  - host: posit01gcp.kimbodo.com
+  - host: {{ $connecetIngress }}
     http:
       paths:
       - path: /
@@ -23,3 +26,13 @@ spec:
             name: {{ printf "%s-rstudio-connect" .Release.Name }}
             port:
               number: 3939
+  - host: {{ $workbenchIngress }}
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: {{ printf "%s-rstudio-workbench" .Release.Name }}
+            port:
+              number: 8787
