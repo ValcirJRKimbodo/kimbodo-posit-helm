@@ -1,6 +1,10 @@
 ## @@ Section GLOBAL ##
 global:
-
+  oauth2:
+    connectUrl:
+    client:
+      id:
+      secret:
   # -- clusterIssuer is the object to set properties to thee issuer that calls letsencrypt
   clusterIssuer:
     # -- enbled is if we gonna create it or not
@@ -30,7 +34,7 @@ global:
 nfs-server-provisioner:
   persistence:
     enabled: true
-    size: "10Gi"
+    size: "50Gi"
   storageClass:
     name: rsc-nfs
     mountOptions:
@@ -49,6 +53,8 @@ ingress-nginx:
 
 ## @@ Section RStudio-connect
 rstudio-connect:
+  # -- Host to ingress posit-connect
+  ingressHost: 
   # Configures shared storage for the Posit Connect pod.
   sharedStorage:
     # -- mount true means that the PVC is already created.
@@ -100,7 +106,7 @@ rstudio-connect:
       Provider: "Postgres"
     # Postgres basic config  
     Postgres:
-      URL: "postgres://connect@posit-connect-postgresql.rstudio-connect.svc.cluster.local:5432/connect?sslmode=disable"
+      URL: "postgres://connect@kimbodo-posit-postgresql.kimbodo-posit.svc.cluster.local:5432/connect?sslmode=disable"
     # Authentication type
     Authentication:
       Provider: "oauth2"
@@ -117,6 +123,108 @@ rstudio-connect:
         valueFrom:
           # -- this secret is created by postgresql chart
           secretKeyRef:
-            name: 
+            name: kimbodo-posit-postgresql
             key: password    
 
+rstudio-workbench:  
+  userCreate: true
+  # -- Host to ingress posit-connect
+  ingressHost: 
+  # -- HPA define how much repelpicas we will have for rstudio-connect pod
+  hpa:
+    minReplicas: 1
+    maxReplicas: 5
+
+  # Mounts the license file appropriately from the Secret
+  # license:
+  #   file:
+  #     # Replace with the name of your license file secret and key
+  #     secret: rstudio-workbench-license
+  #     secretKey: rstudio-workbench.lic
+
+  # Configures user home directory shared storage
+  homeStorage:
+    create: true
+    # The name of the PVC created for Workbench's user home directory shared storage.
+    name: workbench-user-pvc
+    # The storageClass to use for Workbench's user home directory. Must support RWX.
+    # Replace with your storage class name.
+    storageClassName: rsc-nfs
+    requests:
+      storage: 10G
+
+  # Configures Workbench shared storage
+  sharedStorage:
+    create: true
+    # The name of the PVC created for Workbench's shared storage directory.
+    name: workbench-shared-pvc
+
+    # The storageClass to use for Workbench's shared storage directory. Must support RWX.
+    # Replace with your storage class name.
+    storageClassName: rsc-nfs
+    requests:
+      storage: 1G
+
+  # Adds an environment variable containing the PostgreSQL password from a Secret
+  pod:
+    extraVolumes:
+      - name: rstudio-run
+        emptyDir: {}
+    extraVolumeMounts:
+      - name: rstudio-run
+        mountPath: /var/run/rstudio-server/rstudio-rserver
+    env:
+      - name: WORKBENCH_POSTGRES_PASSWORD
+        valueFrom:
+          secretKeyRef:
+            # Replace with the name of your database password secret and key
+            name: kimbodo-posit-postgresql
+            key: password      
+  # Creates a test user to verify installation
+  userCreate: true
+
+  # The config section is converted into the correct configuration files and are
+  # mounted to the server/session pods as needed.
+  config:
+    
+    secret:
+      database.conf:
+        provider: "postgresql"
+        connection-uri: "postgres://connect@kimbodo-posit-postgresql.kimbodo-posit.svc.cluster.local:5432/connect?sslmode=disable"
+        # While it is possible to set a Postgres password here in the values file,
+        # we recommend adding it from a Secret as an environment variable as shown in pod.env
+      openid-client-secret:
+        client-id: 
+        client-secret: 
+    session:
+      rsession.conf:
+        # These settings apply to RStudio Pro IDE sessions
+        session-timeout-minutes: 60
+        session-timeout-suspend: 1
+        session-quit-child-processes-on-exit: 1
+      repos.conf:
+        # This will set the Posit Public Package Manager (P3M) as the default R repository
+        # for Workbench users. This is recommended as P3M provides linux binaries for many
+        # R packages which will decrease package installation time. If you have your own
+        # Posit Package Manager server then replace these URLs with the URLs of your server.
+        CRAN: https://packagemanager.posit.co/cran/__linux__/jammy/latest
+    server:
+      rserver.conf:
+        auth-openid: "1"
+        auth-openid-issuer:
+        auth-openid-username-claim: given_name
+      jupyter.conf:
+        # These settings apply to Jupyter Notebook and JupyterLab IDE sessions
+        session-cull-minutes: 60
+        session-shutdown-minutes: 5
+    profiles:
+      launcher.kubernetes.profiles.conf:
+        "*":
+          # These settings are applied for all users and can be changed to suit
+          # your particular user needs. See the following resources for more information:
+          # https://github.com/rstudio/helm/tree/main/charts/rstudio-workbench#etcrstudiolauncherkubernetesprofilesconf
+          # https://docs.posit.co/ide/server-pro/job_launcher/kubernetes_plugin.html#kube-profiles
+          default-cpus: "1.0"
+          default-mem-mb: "2048"
+          max-cpus: "4.0"
+          max-mem-mb: "8192"
