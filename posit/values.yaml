@@ -1,10 +1,5 @@
 ## @@ Section GLOBAL ##
 global:
-  oauth2:
-    connectUrl:
-    client:
-      id:
-      secret:
   # -- clusterIssuer is the object to set properties to thee issuer that calls letsencrypt
   clusterIssuer:
     # -- enbled is if we gonna create it or not
