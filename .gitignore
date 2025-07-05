@@ -9,3 +9,5 @@ values/*
 *.tgz
 
 Chart.lock
+
+values-environments/

@@ -1,10 +1,9 @@
 {{- $connecetIngress := index .Values "rstudio-connect" "ingressHost" -}}
-{{- $workbenchIngress := index .Values "rstudio-workbench" "ingressHost" -}}
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: posit-connect
-  namespace: {{ .Release.namespace }}
+  namespace: {{ .Values.global.namespaces.rstudioConnect }}
   annotations:
     cert-manager.io/cluster-issuer: "letsencrypt-prod"
     nginx.ingress.kubernetes.io/ssl-redirect: "true"
@@ -13,7 +12,6 @@ spec:
   tls:
   - hosts:
     - {{ $connecetIngress }}
-    - {{ $workbenchIngress }}
     secretName: posit01gcp-tls
   rules:
   - host: {{ $connecetIngress }}
@@ -23,16 +21,6 @@ spec:
         pathType: Prefix
         backend:
           service:
-            name: {{ printf "%s-rstudio-connect" .Release.Name }}
+            name: rstudio-connect
             port:
               number: 3939
-  - host: {{ $workbenchIngress }}
-    http:
-      paths:
-      - path: /
-        pathType: Prefix
-        backend:
-          service:
-            name: {{ printf "%s-rstudio-workbench" .Release.Name }}
-            port:
-              number: 8787

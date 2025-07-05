@@ -1,15 +1,16 @@
 {{- $claimMin := index .Values "rstudio-connect" "hpa" "minReplicas" -}}
 {{- $claimMax := index .Values "rstudio-connect" "hpa" "maxReplicas" -}}
+{{- $fullName := index .Values "rstudio-connect" "fullnameOverride" -}}
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
-  name: posit-connect-hpa
-  namespace: {{ .Release.namespace }}
+  name: {{ $fullName }}
+  namespace: {{ .Values.global.namespaces.rstudioConnect }}
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
     kind: Deployment
-    name: posit-connect-rstudio-connect
+    name: {{ $fullName }}
   minReplicas: {{ $claimMin }}
   maxReplicas: {{ $claimMax }}
   metrics:

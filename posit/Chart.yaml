@@ -1,23 +1,5 @@
 apiVersion: v2
-name: kimbodo-posit-mvc
+name: kimbodo-posit-base-resources
 description: A chart to deploy a MVC to use Posit as off-host
 version: 0.0.1
 appVersion: "0.0.1"
-dependencies:
-  - name: rstudio-connect
-    condition: rstudio-connect.enabled
-    version: 0.8.3
-    repository: "https://helm.rstudio.com"
-  - name: rstudio-workbench
-    condition: rstudio-workbench.enabled
-    version: 0.9.6
-    repository: "https://helm.rstudio.com"
-  - name: postgresql
-    repository: "https://charts.bitnami.com/bitnami"
-    version: 11.6.16
-  - name: nfs-server-provisioner
-    version: 1.8.0
-    repository: https://kubernetes-sigs.github.io/nfs-ganesha-server-and-external-provisioner/
-  - name: ingress-nginx
-    version: 4.12.3
-    repository: https://kubernetes.github.io/ingress-nginx

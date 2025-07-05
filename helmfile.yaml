@@ -1,0 +1,87 @@
+repositories:
+ - name: rstudio
+   url: https://helm.rstudio.com
+ - name: jetstack
+   url: https://charts.jetstack.io
+ - name: bitnami
+   url: https://charts.bitnami.com/bitnami
+ - name: nfs-ganesha-server-and-external-provisioner
+   url: https://kubernetes-sigs.github.io/nfs-ganesha-server-and-external-provisioner/
+ - name: ingress-nginx
+   url: https://kubernetes.github.io/ingress-nginx
+
+helmDefaults:
+  wait: true
+  timeout: 600  
+
+releases:  
+  - name: cert-manager
+    namespace: cert-manager
+    createNamespace: true
+    chart: jetstack/cert-manager
+    version: v1.17.1
+    values:
+      - ./values-environments/mvc/cert-manager.yaml  
+    
+  - name: ingress-nginx
+    namespace: ingress-nginx
+    createNamespace: true
+    chart: ingress-nginx/ingress-nginx
+    version: 4.12.3    
+    values: 
+      - ./values-environments/mvc/global.yaml
+      - ./values-environments/mvc/ingress-nginx.yaml    
+    needs:
+      - cert-manager/cert-manager
+
+  - name: kimbodo-posit-base-resources
+    namespace: kimbodo-posit
+    createNamespace: true
+    chart: ./posit
+    version: 0.0.1    
+    values:
+      - ./values-environments/mvc/global.yaml    
+    needs:
+      - cert-manager/cert-manager
+  
+  - name: postgresql
+    namespace: postgresql
+    createNamespace: false
+    chart: bitnami/postgresql
+    version: 11.6.16   
+    values:
+      - ./values-environments/mvc/postgresql.yaml
+      - ./values-environments/mvc/global.yaml
+    needs:
+      - kimbodo-posit/kimbodo-posit-base-resources
+  
+  - name: nfs-server-provisioner
+    namespace: nfs-server-provisioner
+    createNamespace: false
+    chart: nfs-ganesha-server-and-external-provisioner/nfs-server-provisioner
+    version: 1.8.0   
+    values:
+      - ./values-environments/mvc/global.yaml
+      - ./values-environments/mvc/nfs-server-provisioner.yaml
+    needs:
+      - kimbodo-posit/kimbodo-posit-base-resources
+
+  - name: rstudio-connect
+    namespace: rstudio-connect
+    createNamespace: false
+    chart: rstudio/rstudio-connect
+    version: 0.8.3  
+    values:
+      - ./values-environments/mvc/global.yaml
+      - ./values-environments/mvc/rstudio-connect.yaml
+    needs:
+      - kimbodo-posit/kimbodo-posit-base-resources
+      - nfs-server-provisioner/nfs-server-provisioner
+      - postgresql/postgresql
+
+
+# dependencies:
+#   - name: rstudio-workbench
+#     condition: rstudio-workbench.enabled
+#     version: 0.9.6
+#     repository: "https://helm.rstudio.com"
