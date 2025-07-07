@@ -3,6 +3,7 @@ global:
   namespaces:
     rstudioConnect: rstudio-connect
     rstudioWorkbench: rstudio-workbench
+    rstudioPackageManager: rstudio-package-manager
     postgresql: postgresql
     nfsServerProvisioner: nfs-server-provisioner
 

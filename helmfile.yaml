@@ -54,6 +54,16 @@ releases:
       - ./values-environments/mvc/global.yaml
     needs:
       - kimbodo-posit/kimbodo-posit-base-resources
+
+  - name: postgresql-package-manager
+    namespace: postgresql
+    createNamespace: false
+    chart: bitnami/postgresql
+    version: 11.6.16   
+    values:
+      - ./values-environments/mvc/postgresql-package-manager.yaml
+    needs:
+      - kimbodo-posit/kimbodo-posit-base-resources
   
   - name: nfs-server-provisioner
     namespace: nfs-server-provisioner
@@ -79,9 +89,28 @@ releases:
       - nfs-server-provisioner/nfs-server-provisioner
       - postgresql/postgresql
 
+  - name: rstudio-workbench
+    namespace: rstudio-workbench
+    createNamespace: false
+    chart: rstudio/rstudio-workbench
+    version: 0.9.6  
+    values:
+      - ./values-environments/mvc/global.yaml
+      - ./values-environments/mvc/rstudio-workbench.yaml
+    needs:
+      - kimbodo-posit/kimbodo-posit-base-resources
+      - nfs-server-provisioner/nfs-server-provisioner
+      - postgresql/postgresql
 
-# dependencies:
-#   - name: rstudio-workbench
-#     condition: rstudio-workbench.enabled
-#     version: 0.9.6
-#     repository: "https://helm.rstudio.com"
+  - name: rstudio-package-manager
+    namespace: rstudio-package-manager
+    createNamespace: false
+    chart: rstudio/rstudio-pm
+    version: 0.5.48
+    values:
+      - ./values-environments/mvc/global.yaml
+      - ./values-environments/mvc/rstudio-package-manager.yaml
+    needs:
+      - kimbodo-posit/kimbodo-posit-base-resources
+      - nfs-server-provisioner/nfs-server-provisioner
+      - postgresql/postgresql

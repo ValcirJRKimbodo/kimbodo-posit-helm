@@ -4,6 +4,8 @@
 *.tmproj
 .vscode/
 
+temp.yaml
+
 o.yaml
 values/*
 *.tgz
