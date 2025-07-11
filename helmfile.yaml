@@ -1,36 +1,45 @@
+environments:
+  mvp-aks:
+    values:
+      - ./values-environments/mvp-aks/global.yaml
+  mvp-gcp:
+    values:
+      - ./values-environments/mvp-gcp/global.yaml
+---
 repositories:
- - name: rstudio
-   url: https://helm.rstudio.com
- - name: jetstack
-   url: https://charts.jetstack.io
- - name: bitnami
-   url: https://charts.bitnami.com/bitnami
- - name: nfs-ganesha-server-and-external-provisioner
-   url: https://kubernetes-sigs.github.io/nfs-ganesha-server-and-external-provisioner/
- - name: ingress-nginx
-   url: https://kubernetes.github.io/ingress-nginx
+  - name: rstudio
+    url: https://helm.rstudio.com
+  - name: jetstack
+    url: https://charts.jetstack.io
+  - name: bitnami
+    url: https://charts.bitnami.com/bitnami
+  - name: nfs-ganesha-server-and-external-provisioner
+    url: https://kubernetes-sigs.github.io/nfs-ganesha-server-and-external-provisioner/
+  - name: ingress-nginx
+    url: https://kubernetes.github.io/ingress-nginx
 
 helmDefaults:
   wait: true
   timeout: 600  
 
-releases:  
+releases:
   - name: cert-manager
-    namespace: cert-manager
+    namespace: cert-manager    
     createNamespace: true
     chart: jetstack/cert-manager
     version: v1.17.1
     values:
-      - ./values-environments/mvc/cert-manager.yaml  
-    
+      - ./values-environments/{{ .Environment.Name }}/cert-manager.yaml
+
   - name: ingress-nginx
     namespace: ingress-nginx
     createNamespace: true
     chart: ingress-nginx/ingress-nginx
-    version: 4.12.3    
-    values: 
-      - ./values-environments/mvc/global.yaml
-      - ./values-environments/mvc/ingress-nginx.yaml    
+    wait: false
+    version: 4.12.3
+    values:
+      - ./values-environments/{{ .Environment.Name }}/global.yaml
+      - ./values-environments/{{ .Environment.Name }}/ingress-nginx.yaml
     needs:
       - cert-manager/cert-manager
 
@@ -38,20 +47,20 @@ releases:
     namespace: kimbodo-posit
     createNamespace: true
     chart: ./posit
-    version: 0.0.1    
+    version: 0.0.1
     values:
-      - ./values-environments/mvc/global.yaml    
+      - ./values-environments/{{ .Environment.Name }}/global.yaml
     needs:
       - cert-manager/cert-manager
-  
+
   - name: postgresql
     namespace: postgresql
     createNamespace: false
     chart: bitnami/postgresql
-    version: 11.6.16   
+    version: 11.6.16
     values:
-      - ./values-environments/mvc/postgresql.yaml
-      - ./values-environments/mvc/global.yaml
+      - ./values-environments/{{ .Environment.Name }}/global.yaml
+      - ./values-environments/{{ .Environment.Name }}/postgresql.yaml
     needs:
       - kimbodo-posit/kimbodo-posit-base-resources
 
@@ -59,20 +68,20 @@ releases:
     namespace: postgresql
     createNamespace: false
     chart: bitnami/postgresql
-    version: 11.6.16   
-    values:
-      - ./values-environments/mvc/postgresql-package-manager.yaml
+    version: 11.6.16
+    values:      
+      - ./values-environments/{{ .Environment.Name }}/postgresql-package-manager.yaml
     needs:
       - kimbodo-posit/kimbodo-posit-base-resources
-  
+
   - name: nfs-server-provisioner
     namespace: nfs-server-provisioner
     createNamespace: false
     chart: nfs-ganesha-server-and-external-provisioner/nfs-server-provisioner
-    version: 1.8.0   
+    version: 1.8.0
     values:
-      - ./values-environments/mvc/global.yaml
-      - ./values-environments/mvc/nfs-server-provisioner.yaml
+      - ./values-environments/{{ .Environment.Name }}/global.yaml
+      - ./values-environments/{{ .Environment.Name }}/nfs-server-provisioner.yaml
     needs:
       - kimbodo-posit/kimbodo-posit-base-resources
 
@@ -80,10 +89,10 @@ releases:
     namespace: rstudio-connect
     createNamespace: false
     chart: rstudio/rstudio-connect
-    version: 0.8.3  
+    version: 0.8.3
     values:
-      - ./values-environments/mvc/global.yaml
-      - ./values-environments/mvc/rstudio-connect.yaml
+      - ./values-environments/{{ .Environment.Name }}/global.yaml
+      - ./values-environments/{{ .Environment.Name }}/rstudio-connect.yaml
     needs:
       - kimbodo-posit/kimbodo-posit-base-resources
       - nfs-server-provisioner/nfs-server-provisioner
@@ -93,10 +102,10 @@ releases:
     namespace: rstudio-workbench
     createNamespace: false
     chart: rstudio/rstudio-workbench
-    version: 0.9.6  
+    version: 0.9.6
     values:
-      - ./values-environments/mvc/global.yaml
-      - ./values-environments/mvc/rstudio-workbench.yaml
+      - ./values-environments/{{ .Environment.Name }}/global.yaml
+      - ./values-environments/{{ .Environment.Name }}/rstudio-workbench.yaml
     needs:
       - kimbodo-posit/kimbodo-posit-base-resources
       - nfs-server-provisioner/nfs-server-provisioner
@@ -108,9 +117,10 @@ releases:
     chart: rstudio/rstudio-pm
     version: 0.5.48
     values:
-      - ./values-environments/mvc/global.yaml
-      - ./values-environments/mvc/rstudio-package-manager.yaml
+      - ./values-environments/{{ .Environment.Name }}/global.yaml
+      - ./values-environments/{{ .Environment.Name }}/rstudio-package-manager.yaml
     needs:
       - kimbodo-posit/kimbodo-posit-base-resources
       - nfs-server-provisioner/nfs-server-provisioner
       - postgresql/postgresql
+      - postgresql/postgresql-package-manager

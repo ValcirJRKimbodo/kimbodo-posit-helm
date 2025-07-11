@@ -8,12 +8,15 @@ metadata:
   annotations:
     cert-manager.io/cluster-issuer: "letsencrypt-prod"
     nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    {{- if eq .Values.global.cloudProvider "AZURE" }}
+    service.beta.kubernetes.io/azure-load-balancer-resource-group: "devops-rg"
+    {{- end}}
 spec:
   ingressClassName: nginx
   tls:
   - hosts:
     - {{ $connecetIngress }}
-    secretName: posit01gcp-package-tls
+    secretName: letsencrypt-prod-account-key
   rules:
   - host: {{ $connecetIngress }}
     http:
